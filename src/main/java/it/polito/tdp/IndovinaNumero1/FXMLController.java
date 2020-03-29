@@ -1,7 +1,10 @@
 package it.polito.tdp.IndovinaNumero1;
 
 import java.net.URL;
+import java.security.InvalidParameterException;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.IndovinaNumero1.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -10,11 +13,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 
 public class FXMLController {
-	private final int nMax=100;
-	private final int tMax=8;
-	private int segreto;
-	private int tentativiFatti;
-	private boolean inGioco=false;
+	
+	private Model model;
+	
 	
 	@FXML
     private TextArea txtMessaggi;
@@ -43,16 +44,11 @@ public class FXMLController {
     
 
     @FXML
-    void DoNuova(ActionEvent event) {
-    	this.segreto=(int)((Math.random())*nMax)+1;
-    	this.tentativiFatti=0;
-    	this.inGioco=true;
-    	
+    void DoNuova(ActionEvent event) { 
+    	this.model.nuovaPartita();
     	layoutTentativo.setDisable(false);
     	txtMessaggi.clear();
-    	txtRimasti.setText(Integer.toString(tMax));
-    	 
-
+    	txtRimasti.setText(Integer.toString(this.model.gettMax()));
     }
 
     @FXML
@@ -67,29 +63,26 @@ public class FXMLController {
     		txtMessaggi.appendText("Devi Inserire un numero\n");
     		return;    		
     	}
-    	this.tentativiFatti++;
-    	//pROVARE A LEVARE RIGHE DI CODICE IN PIU'
-    	if(tentativo<this.segreto) {
-    		txtMessaggi.appendText("Tentativo troppo basso\n");
+    	int risultato=-1;
+    	try {
+    		risultato=this.model.tentativo(tentativo); 
+    	}catch(IllegalStateException se) {
+    		txtMessaggi.appendText(se.getMessage());
+    		return;
+    	}catch(InvalidParameterException te) {
+    		txtMessaggi.appendText(te.getMessage());
+    		return;
+    	}
+    	
+    	
+    	if(risultato==0) {
+    		txtMessaggi.appendText("Hai vinto\n");
+    	}else if(risultato==-1) {
+    		txtMessaggi.appendText("Troppo basso\n");    		
     	}else {
-    		txtMessaggi.appendText("Tentativo troppo alto\n");
-    	}
-    	this.txtRimasti.setText(Integer.toString(tMax-tentativiFatti));
-    	txtTentativi.clear();
-    	if(tentativo==segreto) {
-    		txtMessaggi.appendText("Hai Vinto, con "+tentativiFatti+" tentativi");
-    		layoutTentativo.setDisable(true);
-    		this.inGioco=false;    		
-    		return;
-    	}
-    	if(tentativiFatti==tMax) {
-    		txtMessaggi.appendText("Perso, era "+ this.segreto);
-    		layoutTentativo.setDisable(true);
-    		this.inGioco=false;    		
-    		return;
-    	}
-    	
-    	
+    		txtMessaggi.appendText("Troppo Alto\n");
+    	} 
+    	txtRimasti.setText(Integer.toString(this.model.gettMax()-this.model.getTentativiFatti()));
 
     }
 
@@ -101,6 +94,9 @@ public class FXMLController {
         assert txtTentativi != null : "fx:id=\"txtTentativi\" was not injected: check your FXML file 'Scene.fxml'.";
         assert btnProva != null : "fx:id=\"btnProva\" was not injected: check your FXML file 'Scene.fxml'.";
         assert txtMessaggi != null : "fx:id=\"txtMessaggi\" was not injected: check your FXML file 'Scene.fxml'.";
-
+        //this.model= new Model();
+    }
+    public void setModel(Model model) {
+    	this.model=model;    	
     }
 }
